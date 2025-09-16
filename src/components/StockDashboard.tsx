@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown, Calendar, DollarSign, Activity, Newspaper } from "lucide-react";
 import StockChart from "./StockChart";
 import NewsPanel from "./NewsPanel";
+import ApiSetup from "./ApiSetup";
 
 interface StockDashboardProps {
   symbol: string;
@@ -176,25 +177,25 @@ const StockDashboard = ({ symbol }: StockDashboardProps) => {
         </Card>
       </div>
 
-      {/* Chart and Analysis */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Stock Chart */}
-        <div className="lg:col-span-2">
-          <Card className="bg-card/50 backdrop-blur-sm border-border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                3-Year Price History
-              </CardTitle>
-              <CardDescription>
-                Historical price movements and trend analysis
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <StockChart symbol={symbol} />
-            </CardContent>
-          </Card>
-        </div>
+        {/* Chart and Analysis */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Stock Chart */}
+          <div className="lg:col-span-2">
+            <Card className="bg-card/50 backdrop-blur-sm border-border">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Historical Price Data
+                </CardTitle>
+                <CardDescription>
+                  Interactive price chart with customizable time periods
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <StockChart symbol={symbol} />
+              </CardContent>
+            </Card>
+          </div>
 
         {/* Analysis Panel */}
         <div className="space-y-6">
@@ -252,9 +253,14 @@ const StockDashboard = ({ symbol }: StockDashboardProps) => {
         </div>
       </div>
 
-      {/* News Panel */}
-      <NewsPanel symbol={symbol} companyName={stockData.name} />
-    </div>
+        {/* News Panel */}
+        <NewsPanel symbol={symbol} companyName={stockData.name} />
+
+        {/* API Setup Section */}
+        <section className="mt-12">
+          <ApiSetup />
+        </section>
+      </div>
   );
 };
 
