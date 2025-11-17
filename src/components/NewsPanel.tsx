@@ -198,27 +198,6 @@ const NewsPanel = ({ symbol, companyName }: NewsPanelProps) => {
     }
   };
 
-  const getImpactVariant = (impact: string) => {
-    switch (impact) {
-      case 'high':
-        return 'destructive';
-      case 'medium':
-        return 'default';
-      default:
-        return 'secondary';
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   return (
     <Card className="bg-card/50 backdrop-blur-sm border-border">
       <CardHeader>
@@ -232,20 +211,15 @@ const NewsPanel = ({ symbol, companyName }: NewsPanelProps) => {
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          {news.map((article) => (
-            <div key={article.id} className="border-l-2 border-border pl-4 hover:border-primary/50 transition-colors">
+          {news.map((article, index) => (
+            <div key={index} className="border-l-2 border-border pl-4 hover:border-primary/50 transition-colors">
               <div className="flex items-start justify-between mb-2">
-                <h4 className="font-semibold text-foreground hover:text-primary transition-colors cursor-pointer flex items-start gap-2">
+                <a href={article.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-foreground hover:text-primary transition-colors cursor-pointer flex items-start gap-2 flex-1">
                   {article.title}
                   <ExternalLink className="h-3 w-3 mt-1 opacity-50" />
-                </h4>
-                <div className="flex items-center gap-2 ml-4">
-                  <Badge variant={getImpactVariant(article.impact)} className="text-xs">
-                    {article.impact.toUpperCase()}
-                  </Badge>
-                  <div className={`flex items-center gap-1 ${getSentimentColor(article.sentiment)}`}>
-                    {getSentimentIcon(article.sentiment)}
-                  </div>
+                </a>
+                <div className={`flex items-center gap-1 ml-4 ${getSentimentColor(article.sentiment)}`}>
+                  {getSentimentIcon(article.sentiment)}
                 </div>
               </div>
               <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
@@ -253,7 +227,7 @@ const NewsPanel = ({ symbol, companyName }: NewsPanelProps) => {
               </p>
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span className="font-medium">{article.source}</span>
-                <span>{formatDate(article.publishedAt)}</span>
+                <span>{article.time}</span>
               </div>
             </div>
           ))}
