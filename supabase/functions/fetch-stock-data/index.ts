@@ -78,11 +78,22 @@ serve(async (req) => {
       price: candleData.c[index],
     })) || [];
 
-    // Calculate change and changePercent
+    // Calculate change and changePercent from quote data
     const currentPrice = quoteData.c || 0;
     const previousClose = quoteData.pc || 0;
     const change = currentPrice - previousClose;
     const changePercent = previousClose ? (change / previousClose) * 100 : 0;
+
+    // Calculate trading volume from historical data (last day's volume)
+    const lastVolume = candleData.v?.[candleData.v.length - 1] || 0;
+    
+    // Market cap is in millions, convert to readable format
+    const marketCapValue = (profileData.marketCapitalization || 0) * 1e6;
+
+    // Get 52-week high/low and P/E from metrics
+    const low52 = metrics['52WeekLow'] || quoteData.l || 0;
+    const high52 = metrics['52WeekHigh'] || quoteData.h || 0;
+    const pe = metrics.peBasicExclExtraTTM || metrics.peExclExtraAnnual || 0;
 
     // Helper function to format large numbers
     const formatNumber = (num: number): string => {
@@ -94,18 +105,9 @@ serve(async (req) => {
       return num.toFixed(0);
     };
 
-    // Calculate trading volume from historical data (last day's volume)
-    const lastVolume = candleData.v?.[candleData.v.length - 1] || 0;
+    // Format the values
     const volume = formatNumber(lastVolume);
-    
-    // Market cap is in millions, convert to readable format
-    const marketCapValue = (profileData.marketCapitalization || 0) * 1e6;
     const marketCap = formatNumber(marketCapValue);
-
-    // Get 52-week high/low and P/E from metrics
-    const low52 = metrics['52WeekLow'] || quoteData.l || 0;
-    const high52 = metrics['52WeekHigh'] || quoteData.h || 0;
-    const pe = metrics.peBasicExclExtraTTM || metrics.peExclExtraAnnual || 0;
 
     // Format response
     const stockData = {
