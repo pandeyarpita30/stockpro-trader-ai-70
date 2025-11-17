@@ -66,6 +66,12 @@ serve(async (req) => {
       price: candleData.c[index],
     })) || [];
 
+    // Calculate change and changePercent
+    const currentPrice = quoteData.c || 0;
+    const previousClose = quoteData.pc || 0;
+    const change = currentPrice - previousClose;
+    const changePercent = previousClose ? (change / previousClose) * 100 : 0;
+
     // Helper function to format large numbers
     const formatNumber = (num: number): string => {
       if (!num || num === 0) return '0';
