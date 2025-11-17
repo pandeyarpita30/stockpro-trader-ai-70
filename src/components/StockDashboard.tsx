@@ -5,6 +5,8 @@ import { TrendingUp, TrendingDown, Calendar, DollarSign, Activity, Newspaper } f
 import StockChart from "./StockChart";
 import NewsPanel from "./NewsPanel";
 import ApiSetup from "./ApiSetup";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface StockDashboardProps {
   symbol: string;
@@ -60,17 +62,36 @@ const mockStockData = {
 };
 
 const StockDashboard = ({ symbol }: StockDashboardProps) => {
-  const [stockData, setStockData] = useState(mockStockData[symbol as keyof typeof mockStockData] || mockStockData.AAPL);
+  const [stockData, setStockData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedPeriod, setSelectedPeriod] = useState('3Y');
 
   useEffect(() => {
-    // Simulate API call
-    setLoading(true);
-    setTimeout(() => {
-      setStockData(mockStockData[symbol as keyof typeof mockStockData] || mockStockData.AAPL);
-      setLoading(false);
-    }, 1000);
-  }, [symbol]);
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('fetch-stock-data', {
+          body: { symbol, period: selectedPeriod }
+        });
+
+        if (error) {
+          console.error('Error fetching stock data:', error);
+          toast.error('Failed to fetch stock data. Please check your API key.');
+          setLoading(false);
+          return;
+        }
+
+        setStockData(data);
+      } catch (error) {
+        console.error('Error:', error);
+        toast.error('Failed to connect to stock data service');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [symbol, selectedPeriod]);
 
   if (loading) {
     return (
@@ -94,8 +115,16 @@ const StockDashboard = ({ symbol }: StockDashboardProps) => {
     );
   }
 
+  if (!stockData) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">Unable to load stock data. Please check your connection.</p>
+      </div>
+    );
+  }
+
   const isPositive = stockData.change > 0;
-  const isPredictionPositive = stockData.prediction === "positive";
+  const isPredictionPositive = stockData.prediction === "Bullish";
 
   return (
     <div className="space-y-8">
@@ -192,7 +221,12 @@ const StockDashboard = ({ symbol }: StockDashboardProps) => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <StockChart symbol={symbol} />
+                <StockChart 
+                  symbol={symbol} 
+                  data={stockData.historicalData || []}
+                  selectedPeriod={selectedPeriod}
+                  onPeriodChange={setSelectedPeriod}
+                />
               </CardContent>
             </Card>
           </div>

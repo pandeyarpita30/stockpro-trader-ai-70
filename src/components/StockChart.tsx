@@ -1,64 +1,34 @@
-import { useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Button } from "@/components/ui/button";
 
 interface StockChartProps {
   symbol: string;
+  data: Array<{ date: string; price: number }>;
+  selectedPeriod: string;
+  onPeriodChange: (period: string) => void;
 }
 
 type TimePeriod = {
   label: string;
   value: string;
-  days: number;
 };
 
 const timePeriods: TimePeriod[] = [
-  { label: '1M', value: '1M', days: 30 },
-  { label: '3M', value: '3M', days: 90 },
-  { label: '6M', value: '6M', days: 180 },
-  { label: '1Y', value: '1Y', days: 365 },
-  { label: '3Y', value: '3Y', days: 1095 },
-  { label: '5Y', value: '5Y', days: 1825 },
-  { label: '10Y', value: '10Y', days: 3650 },
+  { label: '1M', value: '1M' },
+  { label: '3M', value: '3M' },
+  { label: '6M', value: '6M' },
+  { label: '1Y', value: '1Y' },
+  { label: '3Y', value: '3Y' },
+  { label: '5Y', value: '5Y' },
+  { label: '10Y', value: '10Y' },
 ];
 
-// Mock historical data generator with configurable time periods
-const generateMockData = (symbol: string, days: number) => {
-  const basePrice = symbol === 'AAPL' ? 150 : symbol === 'TSLA' ? 200 : 300;
-  const data = [];
-  const now = new Date();
-  
-  // Adjust data points based on time period for better performance
-  const dataPoints = Math.min(days, 500); // Limit data points for performance
-  const interval = Math.max(1, Math.floor(days / dataPoints));
-  
-  for (let i = days; i >= 0; i -= interval) {
-    const date = new Date(now.getTime() - (i * 24 * 60 * 60 * 1000));
-    const randomVariation = (Math.random() - 0.5) * 0.1;
-    const trendFactor = (days - i) / days * 0.3; // Gradual upward trend
-    const cyclicalFactor = Math.sin((days - i) / days * Math.PI * 4) * 0.1; // Add some cyclical movement
-    const price = basePrice * (1 + trendFactor + randomVariation + cyclicalFactor);
-    
-    data.push({
-      date: date.toISOString().split('T')[0],
-      price: Number(price.toFixed(2)),
-      volume: Math.floor(Math.random() * 100000000),
-    });
-  }
-  
-  return data.reverse();
-};
-
-const StockChart = ({ symbol }: StockChartProps) => {
-  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>(timePeriods[4]); // Default to 3Y
-  const data = generateMockData(symbol, selectedPeriod.days);
-
+const StockChart = ({ data, selectedPeriod, onPeriodChange }: StockChartProps) => {
   const formatPrice = (value: number) => `$${value.toFixed(2)}`;
-  const formatVolume = (value: number) => `${(value / 1000000).toFixed(1)}M`;
 
   const getDateFormat = (): Intl.DateTimeFormatOptions => {
-    if (selectedPeriod.days <= 30) return { month: 'short', day: 'numeric' } as const;
-    if (selectedPeriod.days <= 365) return { month: 'short', year: '2-digit' } as const;
+    if (selectedPeriod === '1M' || selectedPeriod === '3M') return { month: 'short', day: 'numeric' } as const;
+    if (selectedPeriod === '6M' || selectedPeriod === '1Y') return { month: 'short', year: '2-digit' } as const;
     return { year: 'numeric' } as const;
   };
 
@@ -69,11 +39,11 @@ const StockChart = ({ symbol }: StockChartProps) => {
         {timePeriods.map((period) => (
           <Button
             key={period.value}
-            variant={selectedPeriod.value === period.value ? "default" : "ghost"}
+            variant={selectedPeriod === period.value ? "default" : "ghost"}
             size="sm"
-            onClick={() => setSelectedPeriod(period)}
+            onClick={() => onPeriodChange(period.value)}
             className={`transition-all ${
-              selectedPeriod.value === period.value 
+              selectedPeriod === period.value 
                 ? "bg-primary text-primary-foreground shadow-sm" 
                 : "hover:bg-muted text-muted-foreground hover:text-foreground"
             }`}
@@ -117,10 +87,7 @@ const StockChart = ({ symbol }: StockChartProps) => {
               month: 'long', 
               day: 'numeric' 
             })}
-            formatter={(value: number, name: string) => [
-              name === 'price' ? formatPrice(value) : formatVolume(value),
-              name === 'price' ? 'Price' : 'Volume'
-            ]}
+            formatter={(value: number) => [formatPrice(value), 'Price']}
           />
           <Area
             type="monotone"
