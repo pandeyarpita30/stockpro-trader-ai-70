@@ -32,6 +32,13 @@ serve(async (req) => {
     );
     const profileData = await profileResponse.json();
 
+    // Fetch basic financials for additional metrics
+    const metricsResponse = await fetch(
+      `https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${apiKey}`
+    );
+    const metricsData = await metricsResponse.json();
+    const metrics = metricsData.metric || {};
+
     // Calculate time range for historical data based on period
     const periodMap: Record<string, number> = {
       '1M': 30,
@@ -59,11 +66,28 @@ serve(async (req) => {
       price: candleData.c[index],
     })) || [];
 
-    // Calculate change and changePercent
-    const currentPrice = quoteData.c || 0;
-    const previousClose = quoteData.pc || 0;
-    const change = currentPrice - previousClose;
-    const changePercent = previousClose ? (change / previousClose) * 100 : 0;
+    // Helper function to format large numbers
+    const formatNumber = (num: number): string => {
+      if (!num || num === 0) return '0';
+      if (num >= 1e12) return `${(num / 1e12).toFixed(2)}T`;
+      if (num >= 1e9) return `${(num / 1e9).toFixed(2)}B`;
+      if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`;
+      if (num >= 1e3) return `${(num / 1e3).toFixed(2)}K`;
+      return num.toFixed(0);
+    };
+
+    // Calculate trading volume from historical data (last day's volume)
+    const lastVolume = candleData.v?.[candleData.v.length - 1] || 0;
+    const volume = formatNumber(lastVolume);
+    
+    // Market cap is in millions, convert to readable format
+    const marketCapValue = (profileData.marketCapitalization || 0) * 1e6;
+    const marketCap = formatNumber(marketCapValue);
+
+    // Get 52-week high/low and P/E from metrics
+    const low52 = metrics['52WeekLow'] || quoteData.l || 0;
+    const high52 = metrics['52WeekHigh'] || quoteData.h || 0;
+    const pe = metrics.peBasicExclExtraTTM || metrics.peExclExtraAnnual || 0;
 
     // Format response
     const stockData = {
@@ -72,10 +96,11 @@ serve(async (req) => {
       price: currentPrice,
       change: change,
       changePercent: changePercent,
-      volume: profileData.shareOutstanding || 0,
-      marketCap: profileData.marketCapitalization || 0,
-      peRatio: 0, // Finnhub doesn't provide P/E in basic profile
-      weekRange52: `${quoteData.l || 0} - ${quoteData.h || 0}`,
+      volume: volume,
+      marketCap: marketCap,
+      pe: pe ? parseFloat(pe.toFixed(2)) : 0,
+      low52: low52,
+      high52: high52,
       historicalData: historicalData,
       prediction: changePercent > 0 ? 'Bullish' : 'Bearish',
       targetPrice: currentPrice * (1 + (changePercent / 100) * 1.5),
