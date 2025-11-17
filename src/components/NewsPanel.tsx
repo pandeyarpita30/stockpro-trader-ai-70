@@ -1,6 +1,10 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Newspaper, TrendingUp, TrendingDown, Calendar, ExternalLink } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Newspaper, TrendingUp, TrendingDown, ExternalLink, Calendar } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface NewsPanelProps {
   symbol: string;
@@ -108,7 +112,69 @@ const mockNews = {
 };
 
 const NewsPanel = ({ symbol, companyName }: NewsPanelProps) => {
-  const news = mockNews[symbol as keyof typeof mockNews] || mockNews.AAPL;
+  const [news, setNews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchNews = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('fetch-stock-news', {
+          body: { symbol }
+        });
+
+        if (error) {
+          console.error('Error fetching news:', error);
+          toast.error('Failed to fetch news');
+          setLoading(false);
+          return;
+        }
+
+        setNews(data.news || []);
+      } catch (error) {
+        console.error('Error:', error);
+        toast.error('Failed to load news');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNews();
+  }, [symbol]);
+
+  const getSentimentBadge = (sentiment: string) => {
+    const lowerSentiment = sentiment?.toLowerCase() || 'neutral';
+    if (lowerSentiment.includes('positive') || lowerSentiment.includes('bullish')) {
+      return { variant: 'default' as const, text: 'Positive' };
+    }
+    if (lowerSentiment.includes('negative') || lowerSentiment.includes('bearish')) {
+      return { variant: 'destructive' as const, text: 'Negative' };
+    }
+    return { variant: 'secondary' as const, text: 'Neutral' };
+  };
+
+  if (loading) {
+    return (
+      <Card className="bg-card border-border/50 h-full">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Newspaper className="h-5 w-5 text-primary" />
+            <CardTitle>Latest News</CardTitle>
+          </div>
+          <CardDescription>Loading news for {companyName}...</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="space-y-2 border-b pb-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-3 w-3/4" />
+              <Skeleton className="h-3 w-1/2" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    );
+  }
 
   const getSentimentColor = (sentiment: string) => {
     switch (sentiment) {
