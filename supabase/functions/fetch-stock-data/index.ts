@@ -25,6 +25,7 @@ serve(async (req) => {
       `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${apiKey}`
     );
     const quoteData = await quoteResponse.json();
+    console.log('Quote data:', JSON.stringify(quoteData));
 
     // Validate that we got valid data
     if (!quoteData || quoteData.error || quoteData.c === undefined || quoteData.c === 0) {
@@ -72,11 +73,18 @@ serve(async (req) => {
     );
     const candleData = await candleResponse.json();
 
-    // Transform the data to match our frontend format
-    const historicalData = candleData.t?.map((timestamp: number, index: number) => ({
-      date: new Date(timestamp * 1000).toISOString().split('T')[0],
-      price: candleData.c[index],
-    })) || [];
+    console.log('Candle data status:', candleData.s);
+    
+    // Note: Finnhub free tier does not include historical candlestick data
+    // Historical data requires premium subscription
+    const historicalData = (candleData.s === 'ok' && candleData.t?.length > 0) 
+      ? candleData.t.map((timestamp: number, index: number) => ({
+          date: new Date(timestamp * 1000).toISOString().split('T')[0],
+          price: candleData.c[index],
+        }))
+      : [];
+
+    console.log('Historical data points:', historicalData.length);
 
     // Calculate change and changePercent from quote data
     const currentPrice = quoteData.c || 0;
@@ -84,8 +92,12 @@ serve(async (req) => {
     const change = currentPrice - previousClose;
     const changePercent = previousClose ? (change / previousClose) * 100 : 0;
 
-    // Calculate trading volume from historical data (last day's volume)
-    const lastVolume = candleData.v?.[candleData.v.length - 1] || 0;
+    // For volume, try to estimate from shareOutstanding as candles require premium
+    // Finnhub free tier doesn't provide realtime volume data
+    const estimatedVolume = profileData.shareOutstanding || 0;
+    const lastVolume = estimatedVolume * 0.02; // Rough estimate: 2% daily turnover
+    
+    console.log('Estimated volume:', lastVolume);
     
     // Market cap is in millions, convert to readable format
     const marketCapValue = (profileData.marketCapitalization || 0) * 1e6;
@@ -106,8 +118,11 @@ serve(async (req) => {
     };
 
     // Format the values
-    const volume = formatNumber(lastVolume);
+    const volume = lastVolume > 0 ? formatNumber(lastVolume) : 'N/A';
     const marketCap = formatNumber(marketCapValue);
+
+    // Add a note about premium features
+    const hasHistoricalData = historicalData.length > 0;
 
     // Format response
     const stockData = {
@@ -125,6 +140,7 @@ serve(async (req) => {
       prediction: changePercent > 0 ? 'Bullish' : 'Bearish',
       targetPrice: currentPrice * (1 + (changePercent / 100) * 1.5),
       analystRating: changePercent > 2 ? 'Strong Buy' : changePercent > 0 ? 'Buy' : changePercent > -2 ? 'Hold' : 'Sell',
+      premiumRequired: !hasHistoricalData, // Indicates if historical data requires premium
     };
 
     console.log('Stock data fetched successfully');

@@ -79,49 +79,62 @@ const StockChart = ({ data, selectedPeriod, onPeriodChange }: StockChartProps) =
       
       {/* Chart */}
       <div className="h-96 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-          <defs>
-            <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis 
-              dataKey="date" 
+        {data.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+            <defs>
+              <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis 
+                dataKey="date" 
+                stroke="hsl(var(--muted-foreground))"
+                tick={{ fontSize: 12 }}
+                tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', getDateFormat())}
+              />
+            <YAxis 
               stroke="hsl(var(--muted-foreground))"
               tick={{ fontSize: 12 }}
-              tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', getDateFormat())}
+              tickFormatter={formatPrice}
             />
-          <YAxis 
-            stroke="hsl(var(--muted-foreground))"
-            tick={{ fontSize: 12 }}
-            tickFormatter={formatPrice}
-          />
-          <Tooltip 
-            contentStyle={{
-              backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '8px',
-              color: 'hsl(var(--foreground))'
-            }}
-            labelFormatter={(value) => new Date(value).toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-            formatter={(value: number) => [formatPrice(value), 'Price']}
-          />
-          <Area
-            type="monotone"
-            dataKey="price"
-            stroke="hsl(var(--primary))"
-            strokeWidth={2}
-            fill="url(#priceGradient)"
-          />
-          </AreaChart>
-        </ResponsiveContainer>
+            <Tooltip 
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px',
+                color: 'hsl(var(--foreground))'
+              }}
+              labelFormatter={(value) => new Date(value).toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+              formatter={(value: number) => [formatPrice(value), 'Price']}
+            />
+            <Area
+              type="monotone"
+              dataKey="price"
+              stroke="hsl(var(--primary))"
+              strokeWidth={2}
+              fill="url(#priceGradient)"
+            />
+            </AreaChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="h-full flex items-center justify-center border border-border rounded-lg bg-muted/10">
+            <div className="text-center p-6">
+              <p className="text-muted-foreground mb-2">Historical chart data unavailable</p>
+              <p className="text-sm text-muted-foreground">
+                Finnhub free tier doesn't include historical candlestick data.
+                <br />
+                Upgrade to premium for charts and volume data.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
