@@ -32,6 +32,30 @@ const StockChart = ({ data, selectedPeriod, onPeriodChange }: StockChartProps) =
     return { year: 'numeric' } as const;
   };
 
+  // Handle empty data
+  if (!data || data.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="flex flex-wrap gap-2 p-1 bg-muted/50 rounded-lg">
+          {timePeriods.map((period) => (
+            <Button
+              key={period.value}
+              variant={selectedPeriod === period.value ? "default" : "ghost"}
+              size="sm"
+              disabled
+              className="opacity-50"
+            >
+              {period.label}
+            </Button>
+          ))}
+        </div>
+        <div className="h-96 w-full flex items-center justify-center border border-border rounded-lg bg-muted/20">
+          <p className="text-muted-foreground">No chart data available</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {/* Time Period Tabs */}

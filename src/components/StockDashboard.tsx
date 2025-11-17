@@ -76,15 +76,25 @@ const StockDashboard = ({ symbol }: StockDashboardProps) => {
 
         if (error) {
           console.error('Error fetching stock data:', error);
-          toast.error('Failed to fetch stock data. Please check your API key.');
+          toast.error(data?.error || 'Failed to fetch stock data. Please use valid ticker symbols (e.g., PLTR, NVDA, AAPL).');
+          setStockData(null);
+          setLoading(false);
+          return;
+        }
+
+        // Check if data is valid
+        if (!data || !data.name || data.price === 0) {
+          toast.error(`No data available for ${symbol}. Please check the ticker symbol.`);
+          setStockData(null);
           setLoading(false);
           return;
         }
 
         setStockData(data);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error:', error);
-        toast.error('Failed to connect to stock data service');
+        toast.error(error?.message || 'Failed to connect to stock data service');
+        setStockData(null);
       } finally {
         setLoading(false);
       }
@@ -117,8 +127,16 @@ const StockDashboard = ({ symbol }: StockDashboardProps) => {
 
   if (!stockData) {
     return (
-      <div className="text-center py-8">
-        <p className="text-muted-foreground">Unable to load stock data. Please check your connection.</p>
+      <div className="text-center py-12">
+        <div className="max-w-md mx-auto p-6 bg-card/50 backdrop-blur-sm border border-border rounded-lg">
+          <p className="text-lg font-semibold text-foreground mb-2">No Stock Data Found</p>
+          <p className="text-muted-foreground mb-4">
+            Unable to load data for "{symbol}". Please make sure you're using a valid ticker symbol.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Examples: PLTR (Palantir), NVDA (Nvidia), AAPL (Apple), TSLA (Tesla)
+          </p>
+        </div>
       </div>
     );
   }
