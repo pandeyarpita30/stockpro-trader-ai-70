@@ -26,11 +26,23 @@ serve(async (req) => {
     );
     const quoteData = await quoteResponse.json();
 
+    // Validate that we got valid data
+    if (!quoteData || quoteData.error || quoteData.c === undefined || quoteData.c === 0) {
+      console.error('Invalid symbol or no data available');
+      throw new Error(`No data available for symbol ${symbol}. Please check if the ticker symbol is correct.`);
+    }
+
     // Fetch company profile
     const profileResponse = await fetch(
       `https://finnhub.io/api/v1/stock/profile2?symbol=${symbol}&token=${apiKey}`
     );
     const profileData = await profileResponse.json();
+
+    // Validate profile data
+    if (!profileData || !profileData.name) {
+      console.error('No profile data available for symbol');
+      throw new Error(`Symbol ${symbol} not found. Please use valid ticker symbols (e.g., AAPL, PLTR, TSLA).`);
+    }
 
     // Fetch basic financials for additional metrics
     const metricsResponse = await fetch(

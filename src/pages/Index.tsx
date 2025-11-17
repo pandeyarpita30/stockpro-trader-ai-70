@@ -57,7 +57,7 @@ const Index = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
                 <Input
                   type="text"
-                  placeholder="Enter company symbol (e.g., AAPL, TSLA)"
+                  placeholder="Enter ticker symbol (e.g., AAPL, PLTR, TSLA)"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 pr-4 py-3 text-lg bg-card/50 backdrop-blur-sm border-border focus:ring-primary focus:border-primary"
@@ -69,7 +69,31 @@ const Index = () => {
                   Analyze
                 </Button>
               </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Use ticker symbols: PLTR for Palantir, NVDA for Nvidia, AAPL for Apple
+              </p>
             </form>
+
+            {/* Popular Stock Symbols */}
+            <div className="max-w-3xl mx-auto">
+              <p className="text-sm text-muted-foreground mb-3">Popular symbols:</p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {['AAPL', 'PLTR', 'NVDA', 'TSLA', 'MSFT', 'GOOGL', 'AMZN', 'META'].map((symbol) => (
+                  <Button
+                    key={symbol}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSearchTerm(symbol);
+                      setSelectedStock(symbol);
+                    }}
+                    className="hover:bg-primary hover:text-primary-foreground transition-colors"
+                  >
+                    {symbol}
+                  </Button>
+                ))}
+              </div>
+            </div>
 
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">

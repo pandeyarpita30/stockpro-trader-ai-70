@@ -210,8 +210,14 @@ const NewsPanel = ({ symbol, companyName }: NewsPanelProps) => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-6">
-          {news.map((article, index) => (
+        {news.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">No recent news available for {symbol}</p>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-6">
+              {news.map((article, index) => (
             <div key={index} className="border-l-2 border-border pl-4 hover:border-primary/50 transition-colors">
               <div className="flex items-start justify-between mb-2">
                 <a href={article.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-foreground hover:text-primary transition-colors cursor-pointer flex items-start gap-2 flex-1">
@@ -230,27 +236,29 @@ const NewsPanel = ({ symbol, companyName }: NewsPanelProps) => {
                 <span>{article.time}</span>
               </div>
             </div>
-          ))}
-        </div>
-        
-        {/* News Impact Summary */}
-        <div className="mt-8 p-4 bg-gradient-to-r from-primary/5 to-accent/5 rounded-lg border border-primary/20">
-          <h5 className="font-semibold text-foreground mb-2">News Impact Analysis</h5>
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold text-profit">2</div>
-              <div className="text-xs text-muted-foreground">Positive</div>
+              ))}
             </div>
-            <div>
-              <div className="text-2xl font-bold text-loss">1</div>
-              <div className="text-xs text-muted-foreground">Negative</div>
+            
+            {/* News Impact Summary */}
+            <div className="mt-8 p-4 bg-gradient-to-r from-primary/5 to-accent/5 rounded-lg border border-primary/20">
+              <h5 className="font-semibold text-foreground mb-2">News Impact Analysis</h5>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-2xl font-bold text-profit">2</div>
+                  <div className="text-xs text-muted-foreground">Positive</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-loss">1</div>
+                  <div className="text-xs text-muted-foreground">Negative</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-profit">+2.1%</div>
+                  <div className="text-xs text-muted-foreground">Sentiment Score</div>
+                </div>
+              </div>
             </div>
-            <div>
-              <div className="text-2xl font-bold text-profit">+2.1%</div>
-              <div className="text-xs text-muted-foreground">Sentiment Score</div>
-            </div>
-          </div>
-        </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );
